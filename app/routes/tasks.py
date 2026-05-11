@@ -1,5 +1,5 @@
 from flask import Blueprint, request, jsonify
-from flask_jwt_extended import (jwt_required, get_jwt_identity)
+from flask_jwt_extended import jwt_required, get_jwt_identity
 
 from app.extensions import db
 from app.models.task import Task
@@ -7,10 +7,10 @@ from app.models.user import User
 
 tasks_bp = Blueprint("tasks", __name__)
 
+
 @tasks_bp.route("", methods=["POST"])
 @jwt_required()
 def create_task():
-
     data = request.get_json()
 
     title = data.get("title")
@@ -23,47 +23,44 @@ def create_task():
         title=title,
         description=description,
         created_by=current_user_id,
-        assigned_to=assigned_to
+        assigned_to=assigned_to,
     )
 
     db.session.add(new_task)
     db.session.commit()
 
-    return jsonify({
-        "message": "Task created successfully"
-    }), 201
+    return jsonify({"message": "Task created successfully"}), 201
+
 
 @tasks_bp.route("", methods=["GET"])
 @jwt_required()
 def get_tasks():
-
     tasks = Task.query.all()
 
     result = []
 
     for task in tasks:
-
-        result.append({
-            "id": task.id,
-            "title": task.title,
-            "description": task.description,
-            "status": task.status,
-            "created_by": task.created_by,
-            "assigned_to": task.assigned_to
-        })
+        result.append(
+            {
+                "id": task.id,
+                "title": task.title,
+                "description": task.description,
+                "status": task.status,
+                "created_by": task.created_by,
+                "assigned_to": task.assigned_to,
+            }
+        )
 
     return jsonify(result), 200
+
 
 @tasks_bp.route("/<int:task_id>", methods=["GET"])
 @jwt_required()
 def get_task(task_id):
-
     task = Task.query.get(task_id)
 
     if not task:
-        return jsonify({
-            "message": "Task not found"
-        }), 404
+        return jsonify({"message": "Task not found"}), 404
 
     result = {
         "id": task.id,
@@ -71,21 +68,19 @@ def get_task(task_id):
         "description": task.description,
         "status": task.status,
         "created_by": task.created_by,
-        "assigned_to": task.assigned_to
+        "assigned_to": task.assigned_to,
     }
 
     return jsonify(result), 200
 
+
 @tasks_bp.route("/<int:task_id>", methods=["PUT"])
 @jwt_required()
 def update_task(task_id):
-
     task = Task.query.get(task_id)
 
     if not task:
-        return jsonify({
-            "message": "Task not found"
-        }), 404
+        return jsonify({"message": "Task not found"}), 404
 
     current_user_id = int(get_jwt_identity())
 
@@ -95,9 +90,7 @@ def update_task(task_id):
     is_creator = task.created_by == current_user_id
 
     if not is_admin and not is_creator:
-        return jsonify({
-            "message": "Access forbidden"
-        }), 403
+        return jsonify({"message": "Access forbidden"}), 403
 
     data = request.get_json()
 
@@ -108,20 +101,16 @@ def update_task(task_id):
 
     db.session.commit()
 
-    return jsonify({
-        "message": "Task updated successfully"
-    }), 200
+    return jsonify({"message": "Task updated successfully"}), 200
+
 
 @tasks_bp.route("/<int:task_id>", methods=["DELETE"])
 @jwt_required()
 def delete_task(task_id):
-
     task = Task.query.get(task_id)
 
     if not task:
-        return jsonify({
-            "message": "Task not found"
-        }), 404
+        return jsonify({"message": "Task not found"}), 404
 
     current_user_id = int(get_jwt_identity())
 
@@ -131,13 +120,9 @@ def delete_task(task_id):
     is_creator = task.created_by == current_user_id
 
     if not is_admin and not is_creator:
-        return jsonify({
-            "message": "Access forbidden"
-        }), 403
+        return jsonify({"message": "Access forbidden"}), 403
 
     db.session.delete(task)
     db.session.commit()
 
-    return jsonify({
-        "message": "Task deleted successfully"
-    }), 200
+    return jsonify({"message": "Task deleted successfully"}), 200
