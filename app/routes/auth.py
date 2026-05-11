@@ -4,6 +4,7 @@ from flask_jwt_extended import (create_access_token, jwt_required, get_jwt_ident
 from app.extensions import db, bcrypt
 from app.models.user import User
 from app.models.role import Role
+from app.middleware.rbac import role_required
 
 auth_bp = Blueprint("auth", __name__)
 
@@ -89,4 +90,13 @@ def profile():
         "username": user.username,
         "email": user.email,
         "role": user.role.name
+    }), 200
+
+@auth_bp.route("/admin", methods=["GET"])
+@jwt_required()
+@role_required("admin")
+def admin_only():
+
+    return jsonify({
+        "message": "Welcome Admin"
     }), 200
