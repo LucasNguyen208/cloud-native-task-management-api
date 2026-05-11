@@ -10,22 +10,22 @@ jobs:
   ci:
     name: Run CI checks
     runs-on: ubuntu-latest
+    timeout-minutes: 10
+
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
-          python-version: '3.10'
+          python-version: "3.10"
 
       - name: Cache pip dependencies
         uses: actions/cache@v4
         with:
           path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
-          restore-keys: |
-            ${{ runner.os }}-pip-
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements*.txt') }}
 
       - name: Install dependencies
         run: |
@@ -33,11 +33,51 @@ jobs:
           pip install -r requirements.txt
           pip install -r requirements-dev.txt
 
+      # -------------------
+      # Ruff
+      # -------------------
       - name: Run lint (ruff)
+        id: ruff
+        continue-on-error: true
         run: ruff check .
 
+      # -------------------
+      # Black
+      # -------------------
       - name: Check formatting (black)
+        id: black
+        continue-on-error: true
         run: black --check .
 
+      # -------------------
+      # Pytest + Coverage
+      # -------------------
       - name: Run tests (pytest)
-        run: pytest
+        id: pytest
+        continue-on-error: true
+        run: |
+          pytest -v --tb=short --cov=app \
+                 --cov-report=term-missing \
+                 --cov-report=xml
+
+      # -------------------
+      # Upload coverage
+      # -------------------
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: coverage.xml
+
+      # -------------------
+      # Final status check
+      # -------------------
+      - name: Fail workflow if any check failed
+        if: |
+          steps.ruff.outcome == 'failure' ||
+          steps.black.outcome == 'failure' ||
+          steps.pytest.outcome == 'failure'
+        run: |
+          echo "One or more checks failed."
+          exit 1
