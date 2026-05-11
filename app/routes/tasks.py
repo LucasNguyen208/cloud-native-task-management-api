@@ -149,9 +149,6 @@ def get_task(task_id):
 @tasks_bp.route("/<int:task_id>", methods=["PUT"])
 @jwt_required()
 def update_task(task_id):
-    @tasks_bp.route("/<int:task_id>", methods=["PUT"])
-@jwt_required()
-def update_task(task_id):
     """
     Update a task
     ---
