@@ -19,19 +19,19 @@ def create_app():
     bcrypt.init_app(app)
 
     swagger_config = {
-    "headers": [],
-    "specs": [
-        {
-            "endpoint": "apispec",
-            "route": "/apispec.json",
-            "rule_filter": lambda rule: True,
-            "model_filter": lambda tag: True,
-        }
-    ],
-    "static_url_path": "/flasgger_static",
-    "swagger_ui": True,
-    "specs_route": "/apidocs/",
-}
+        "headers": [],
+        "specs": [
+            {
+                "endpoint": "apispec",
+                "route": "/apispec.json",
+                "rule_filter": lambda rule: True,
+                "model_filter": lambda tag: True,
+            }
+        ],
+        "static_url_path": "/flasgger_static",
+        "swagger_ui": True,
+        "specs_route": "/apidocs/",
+    }
 
     swagger_template = {
         "swagger": "2.0",
