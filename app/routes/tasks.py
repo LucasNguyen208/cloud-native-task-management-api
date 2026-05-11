@@ -11,6 +11,43 @@ tasks_bp = Blueprint("tasks", __name__)
 @tasks_bp.route("", methods=["POST"])
 @jwt_required()
 def create_task():
+    """
+    Create a new task
+    ---
+    tags:
+      - Tasks
+
+    security:
+      - BearerAuth: []
+
+    parameters:
+      - in: body
+        name: body
+        required: true
+
+        schema:
+          type: object
+
+          required:
+            - title
+
+          properties:
+            title:
+              type: string
+              example: Implement Swagger
+
+            description:
+              type: string
+              example: Add API documentation using Flasgger
+
+            assigned_to:
+              type: integer
+              example: 1
+
+    responses:
+      201:
+        description: Task created successfully
+    """
     data = request.get_json()
 
     title = data.get("title")
@@ -35,6 +72,19 @@ def create_task():
 @tasks_bp.route("", methods=["GET"])
 @jwt_required()
 def get_tasks():
+    """
+    Get all tasks
+    ---
+    tags:
+      - Tasks
+
+    security:
+      - BearerAuth: []
+
+    responses:
+      200:
+        description: List of tasks retrieved successfully
+    """
     tasks = Task.query.all()
 
     result = []
@@ -57,6 +107,28 @@ def get_tasks():
 @tasks_bp.route("/<int:task_id>", methods=["GET"])
 @jwt_required()
 def get_task(task_id):
+    """
+    Get a single task by ID
+    ---
+    tags:
+      - Tasks
+
+    security:
+      - BearerAuth: []
+
+    parameters:
+      - in: path
+        name: task_id
+        type: integer
+        required: true
+
+    responses:
+      200:
+        description: Task retrieved successfully
+
+      404:
+        description: Task not found
+    """
     task = Task.query.get(task_id)
 
     if not task:
@@ -77,6 +149,51 @@ def get_task(task_id):
 @tasks_bp.route("/<int:task_id>", methods=["PUT"])
 @jwt_required()
 def update_task(task_id):
+    """
+    Update a task
+    ---
+    tags:
+      - Tasks
+
+    security:
+      - BearerAuth: []
+
+    parameters:
+      - in: path
+        name: task_id
+        type: integer
+        required: true
+
+      - in: body
+        name: body
+
+        schema:
+          type: object
+
+          properties:
+            title:
+              type: string
+
+            description:
+              type: string
+
+            status:
+              type: string
+              example: in_progress
+
+            assigned_to:
+              type: integer
+
+    responses:
+      200:
+        description: Task updated successfully
+
+      403:
+        description: Access forbidden
+
+      404:
+        description: Task not found
+    """
     task = Task.query.get(task_id)
 
     if not task:
@@ -107,6 +224,31 @@ def update_task(task_id):
 @tasks_bp.route("/<int:task_id>", methods=["DELETE"])
 @jwt_required()
 def delete_task(task_id):
+    """
+    Delete a task
+    ---
+    tags:
+      - Tasks
+
+    security:
+      - BearerAuth: []
+
+    parameters:
+      - in: path
+        name: task_id
+        type: integer
+        required: true
+
+    responses:
+      200:
+        description: Task deleted successfully
+
+      403:
+        description: Access forbidden
+
+      404:
+        description: Task not found
+    """
     task = Task.query.get(task_id)
 
     if not task:
