@@ -10,6 +10,7 @@ jobs:
   ci:
     name: Run CI checks
     runs-on: ubuntu-latest
+    timeout-minutes: 10
 
     steps:
       - name: Checkout code
@@ -55,7 +56,7 @@ jobs:
         id: pytest
         continue-on-error: true
         run: |
-          pytest --cov=app \
+          pytest -v --tb=short --cov=app \
                  --cov-report=term-missing \
                  --cov-report=xml
 

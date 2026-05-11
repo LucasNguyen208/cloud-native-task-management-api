@@ -19,14 +19,10 @@ def role_required(required_role):
             user = User.query.get(current_user_id)
 
             if not user:
-                return jsonify({
-                    "message": "User not found"
-                }), 404
+                return jsonify({"message": "User not found"}), 404
 
             if user.role.name != required_role:
-                return jsonify({
-                    "message": "Access forbidden"
-                }), 403
+                return jsonify({"message": "Access forbidden"}), 403
 
             return func(*args, **kwargs)
 
