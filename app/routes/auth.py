@@ -11,6 +11,45 @@ auth_bp = Blueprint("auth", __name__)
 
 @auth_bp.route("/register", methods=["POST"])
 def register():
+    """
+    Register a new user
+    ---
+    tags:
+      - Authentication
+
+    parameters:
+      - in: body
+        name: body
+        required: true
+
+        schema:
+          type: object
+
+          required:
+            - username
+            - email
+            - password
+
+          properties:
+            username:
+              type: string
+              example: long
+
+            email:
+              type: string
+              example: long@example.com
+
+            password:
+              type: string
+              example: password123
+
+    responses:
+      201:
+        description: User registered successfully
+
+      400:
+        description: Email already exists
+    """
     data = request.get_json()
 
     username = data.get("username")
@@ -41,6 +80,40 @@ def register():
 
 @auth_bp.route("/login", methods=["POST"])
 def login():
+    """
+    Login user
+    ---
+    tags:
+      - Authentication
+
+    parameters:
+      - in: body
+        name: body
+        required: true
+
+        schema:
+          type: object
+
+          required:
+            - email
+            - password
+
+          properties:
+            email:
+              type: string
+              example: long@example.com
+
+            password:
+              type: string
+              example: password123
+
+    responses:
+      200:
+        description: Login successful
+
+      401:
+        description: Invalid email or password
+    """
     data = request.get_json()
 
     email = data.get("email")
@@ -64,6 +137,22 @@ def login():
 @auth_bp.route("/profile", methods=["GET"])
 @jwt_required()
 def profile():
+    """
+    Get current user profile
+    ---
+    tags:
+      - Authentication
+
+    security:
+      - BearerAuth: []
+
+    responses:
+      200:
+        description: User profile retrieved successfully
+
+      401:
+        description: Missing or invalid token
+    """
     current_user_id = get_jwt_identity()
 
     user = User.query.get(current_user_id)
@@ -85,4 +174,20 @@ def profile():
 @jwt_required()
 @role_required("admin")
 def admin_only():
+    """
+    Admin-only endpoint
+    ---
+    tags:
+      - Authentication
+
+    security:
+      - BearerAuth: []
+
+    responses:
+      200:
+        description: Admin access granted
+
+      403:
+        description: Access forbidden
+    """
     return jsonify({"message": "Welcome Admin"}), 200
