@@ -1,2 +1,2 @@
-from app.models.role import Role
-from app.models.user import User
+from app.models.role import Role as Role
+from app.models.role import User as User

@@ -1,7 +1,8 @@
 from flask import Flask
 from app.config import Config
 from app.extensions import db, migrate, jwt, bcrypt
-from app.models import Role, User
+from app.models import Role as Role
+from app.models import User as User
 from app.routes.auth import auth_bp
 
 
