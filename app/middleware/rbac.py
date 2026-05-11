@@ -8,12 +8,9 @@ from app.models.user import User
 
 
 def role_required(required_role):
-
     def decorator(func):
-
         @wraps(func)
         def wrapper(*args, **kwargs):
-
             current_user_id = get_jwt_identity()
 
             user = User.query.get(current_user_id)

@@ -11,7 +11,6 @@ auth_bp = Blueprint("auth", __name__)
 
 @auth_bp.route("/register", methods=["POST"])
 def register():
-
     data = request.get_json()
 
     username = data.get("username")
@@ -42,7 +41,6 @@ def register():
 
 @auth_bp.route("/login", methods=["POST"])
 def login():
-
     data = request.get_json()
 
     email = data.get("email")
@@ -66,7 +64,6 @@ def login():
 @auth_bp.route("/profile", methods=["GET"])
 @jwt_required()
 def profile():
-
     current_user_id = get_jwt_identity()
 
     user = User.query.get(current_user_id)
@@ -88,5 +85,4 @@ def profile():
 @jwt_required()
 @role_required("admin")
 def admin_only():
-
     return jsonify({"message": "Welcome Admin"}), 200
