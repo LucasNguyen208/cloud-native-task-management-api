@@ -51,10 +51,14 @@ def register():
         description: Email already exists
     """
     data = request.get_json()
+    if not data:
+        return jsonify({"message": "Request body is required"}), 400
 
     username = data.get("username")
     email = data.get("email")
     password = data.get("password")
+    if not username or not email or not password:
+        return jsonify({"message": "Username, email and password are required"}), 400
 
     existing_user = User.query.filter_by(email=email).first()
 
@@ -115,9 +119,13 @@ def login():
         description: Invalid email or password
     """
     data = request.get_json()
+    if not data:
+        return jsonify({"message": "Request body is required"}), 400
 
     email = data.get("email")
     password = data.get("password")
+    if not email or not password:
+        return jsonify({"message": "Email and password are required"}), 400
 
     user = User.query.filter_by(email=email).first()
 

@@ -49,8 +49,12 @@ def create_task():
         description: Task created successfully
     """
     data = request.get_json()
+    if not data:
+        return jsonify({"message": "Request body is required"}), 400
 
     title = data.get("title")
+    if not title:
+        return jsonify({"message": "Title is required"}), 400
     description = data.get("description")
     assigned_to = data.get("assigned_to")
 
@@ -195,7 +199,6 @@ def update_task(task_id):
         description: Task not found
     """
     task = Task.query.get(task_id)
-
     if not task:
         return jsonify({"message": "Task not found"}), 404
 
@@ -210,6 +213,14 @@ def update_task(task_id):
         return jsonify({"message": "Access forbidden"}), 403
 
     data = request.get_json()
+    if not data:
+        return jsonify({"message": "Request body is required"}), 400
+    valid_statuses = ["todo", "in_progress", "done"]
+
+    new_status = data.get("status")
+
+    if new_status and new_status not in valid_statuses:
+        return jsonify({"message": "Invalid task status"}), 400
 
     task.title = data.get("title", task.title)
     task.description = data.get("description", task.description)
