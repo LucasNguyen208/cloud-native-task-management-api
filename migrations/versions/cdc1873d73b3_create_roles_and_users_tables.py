@@ -1,7 +1,7 @@
 """create roles and users tables
 
 Revision ID: cdc1873d73b3
-Revises: 
+Revises:
 Create Date: 2026-05-08 20:02:34.083721
 
 """
