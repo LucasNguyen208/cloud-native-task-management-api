@@ -1,0 +1,38 @@
+services:
+
+  api:
+    build: .
+
+    container_name: flask_api
+
+    ports:
+      - "5000:5000"
+
+    env_file:
+      - .env
+
+    depends_on:
+      - db
+
+    volumes:
+      - .:/app
+
+  db:
+    image: mysql:8.4
+
+    container_name: mysql_db
+
+    restart: always
+
+    environment:
+      MYSQL_ROOT_PASSWORD: Root@123
+      MYSQL_DATABASE: task_management
+
+    ports:
+      - "3307:3306"
+
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+volumes:
+  mysql_data:
