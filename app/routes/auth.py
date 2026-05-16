@@ -51,19 +51,43 @@ def register():
         description: Email already exists
     """
     data = request.get_json()
+
+    # =========================
+    # Request Validation
+    # =========================
+
     if not data:
         return jsonify({"message": "Request body is required"}), 400
 
     username = data.get("username")
     email = data.get("email")
     password = data.get("password")
+
+    # =========================
+    # Required Fields Validation
+    # =========================
+
     if not username or not email or not password:
         return jsonify({"message": "Username, email and password are required"}), 400
+
+    # =========================
+    # Length Validation
+    # =========================
+
+    if len(username) < 3 or len(username) > 50:
+        return jsonify({"message": "Username must be between 3 and 50 characters"}), 400
+
+    if len(password) < 8:
+        return jsonify({"message": "Password must be at least 8 characters long"}), 400
+
+    # =========================
+    # Duplicate Validation
+    # =========================
 
     existing_user = User.query.filter_by(email=email).first()
 
     if existing_user:
-        return jsonify({"message": "Email already exists"}), 400
+        return jsonify({"message": "Email already exists"}), 409
 
     default_role = Role.query.filter_by(name="user").first()
 
@@ -119,6 +143,11 @@ def login():
         description: Invalid email or password
     """
     data = request.get_json()
+
+    # =========================
+    # Request Validation
+    # =========================
+
     if not data:
         return jsonify({"message": "Request body is required"}), 400
 

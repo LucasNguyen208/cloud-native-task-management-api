@@ -49,14 +49,39 @@ def create_task():
         description: Task created successfully
     """
     data = request.get_json()
+
+    # =========================
+    # Request Validation
+    # =========================
+
     if not data:
         return jsonify({"message": "Request body is required"}), 400
 
     title = data.get("title")
-    if not title:
-        return jsonify({"message": "Title is required"}), 400
     description = data.get("description")
     assigned_to = data.get("assigned_to")
+
+    # =========================
+    # Required Fields Validation
+    # =========================
+
+    if not title:
+        return jsonify({"message": "Title is required"}), 400
+
+    # =========================
+    # Length Validation
+    # =========================
+
+    if len(title) < 3 or len(title) > 255:
+        return jsonify({"message": "Title must be between 3 and 255 characters"}), 400
+
+    if description is not None and len(description) > 1000:
+        return jsonify({"message": "Description cannot exceed 1000 characters"}), 400
+
+    # =========================
+    # Foreign Key Validation
+    # =========================
+
     if assigned_to is not None:
 
         assigned_user = User.query.get(assigned_to)
@@ -219,9 +244,44 @@ def update_task(task_id):
         return jsonify({"message": "Access forbidden"}), 403
 
     data = request.get_json()
+
+    # =========================
+    # Request Validation
+    # =========================
+
     if not data:
         return jsonify({"message": "Request body is required"}), 400
+
+    # =========================
+    # Length Validation
+    # =========================
+
+    new_title = data.get("title")
+    if new_title is not None:
+        if len(new_title) < 3 or len(new_title) > 255:
+            return (
+                jsonify({"message": "Title must be between 3 and 255 characters"}),
+                400,
+            )
+
+    new_description = data.get("description")
+    if new_description is not None and len(new_description) > 1000:
+        return jsonify({"message": "Description cannot exceed 1000 characters"}), 400
+
+    # =========================
+    # Enum Validation
+    # =========================
+
     valid_statuses = ["todo", "in_progress", "done"]
+    new_status = data.get("status")
+
+    if new_status is not None and new_status not in valid_statuses:
+        return jsonify({"message": "Invalid task status"}), 400
+
+    # =========================
+    # Foreign Key Validation
+    # =========================
+
     assigned_to = data.get("assigned_to")
 
     if assigned_to is not None:
@@ -231,10 +291,9 @@ def update_task(task_id):
         if not assigned_user:
             return jsonify({"message": "Assigned user not found"}), 404
 
-    new_status = data.get("status")
-
-    if new_status and new_status not in valid_statuses:
-        return jsonify({"message": "Invalid task status"}), 400
+    # =========================
+    # Update Task
+    # =========================
 
     task.title = data.get("title", task.title)
     task.description = data.get("description", task.description)
