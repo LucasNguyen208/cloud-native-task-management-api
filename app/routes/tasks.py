@@ -57,6 +57,12 @@ def create_task():
         return jsonify({"message": "Title is required"}), 400
     description = data.get("description")
     assigned_to = data.get("assigned_to")
+    if assigned_to is not None:
+
+        assigned_user = User.query.get(assigned_to)
+
+        if not assigned_user:
+            return jsonify({"message": "Assigned user not found"}), 404
 
     current_user_id = get_jwt_identity()
 
@@ -216,6 +222,14 @@ def update_task(task_id):
     if not data:
         return jsonify({"message": "Request body is required"}), 400
     valid_statuses = ["todo", "in_progress", "done"]
+    assigned_to = data.get("assigned_to")
+
+    if assigned_to is not None:
+
+        assigned_user = User.query.get(assigned_to)
+
+        if not assigned_user:
+            return jsonify({"message": "Assigned user not found"}), 404
 
     new_status = data.get("status")
 
