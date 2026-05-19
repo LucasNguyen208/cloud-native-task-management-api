@@ -1,3 +1,4 @@
+import re
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
 
@@ -69,6 +70,17 @@ def register():
 
     if not username or not email or not password:
         return jsonify({"message": "Username, email and password are required"}), 400
+
+    # =========================
+    # Email Format Validation
+    # =========================
+
+    email_pattern = r"^[^\s@]+@[^\s@]+\.[^\s@]+$"
+
+    if not re.match(email_pattern, email):
+        return jsonify({
+            "message": "Invalid email format"
+        }), 400
 
     # =========================
     # Length Validation
