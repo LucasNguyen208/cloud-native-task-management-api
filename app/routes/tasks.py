@@ -89,7 +89,6 @@ def create_task():
     # =========================
 
     if assigned_to is not None:
-
         assigned_user = User.query.get(assigned_to)
 
         if not assigned_user:
@@ -290,7 +289,6 @@ def update_task(task_id):
     assigned_to = data.get("assigned_to")
 
     if assigned_to is not None:
-
         assigned_user = User.query.get(assigned_to)
 
         if not assigned_user:
