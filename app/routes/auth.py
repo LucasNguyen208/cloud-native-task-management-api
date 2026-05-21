@@ -5,6 +5,13 @@ from app.extensions import db, bcrypt
 from app.models.user import User
 from app.models.role import Role
 from app.middleware.rbac import role_required
+from app.validators.auth_validators import (
+    validate_request_body,
+    validate_required_fields,
+    validate_email_format,
+    validate_username,
+    validate_password,
+)
 
 auth_bp = Blueprint("auth", __name__)
 
@@ -52,14 +59,49 @@ def register():
     """
     data = request.get_json()
 
+    # =========================
+    # Request Validation
+    # =========================
+
+    if not validate_request_body(data):
+        return jsonify({"message": "Request body is required"}), 400
+
     username = data.get("username")
     email = data.get("email")
     password = data.get("password")
 
+    # =========================
+    # Required Fields Validation
+    # =========================
+
+    if not validate_required_fields(username, email, password):
+        return jsonify({"message": "Username, email and password are required"}), 400
+
+    # =========================
+    # Email Format Validation
+    # =========================
+
+    if not validate_email_format(email):
+        return jsonify({"message": "Invalid email format"}), 400
+
+    # =========================
+    # Length Validation
+    # =========================
+
+    if not validate_username(username):
+        return jsonify({"message": "Username must be between 3 and 50 characters"}), 400
+
+    if not validate_password(password):
+        return jsonify({"message": "Password must be at least 8 characters long"}), 400
+
+    # =========================
+    # Duplicate Validation
+    # =========================
+
     existing_user = User.query.filter_by(email=email).first()
 
     if existing_user:
-        return jsonify({"message": "Email already exists"}), 400
+        return jsonify({"message": "Email already exists"}), 409
 
     default_role = Role.query.filter_by(name="user").first()
 
@@ -116,8 +158,17 @@ def login():
     """
     data = request.get_json()
 
+    # =========================
+    # Request Validation
+    # =========================
+
+    if not validate_request_body(data):
+        return jsonify({"message": "Request body is required"}), 400
+
     email = data.get("email")
     password = data.get("password")
+    if not validate_required_fields(email, password):
+        return jsonify({"message": "Email and password are required"}), 400
 
     user = User.query.filter_by(email=email).first()
 

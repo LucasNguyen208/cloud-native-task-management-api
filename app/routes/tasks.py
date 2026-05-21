@@ -4,6 +4,12 @@ from flask_jwt_extended import jwt_required, get_jwt_identity
 from app.extensions import db
 from app.models.task import Task
 from app.models.user import User
+from app.validators.task_validators import (
+    validate_request_body,
+    validate_title,
+    validate_description,
+    validate_task_status,
+)
 
 tasks_bp = Blueprint("tasks", __name__)
 
@@ -50,9 +56,43 @@ def create_task():
     """
     data = request.get_json()
 
+    # =========================
+    # Request Validation
+    # =========================
+
+    if not validate_request_body(data):
+        return jsonify({"message": "Request body is required"}), 400
+
     title = data.get("title")
     description = data.get("description")
     assigned_to = data.get("assigned_to")
+
+    # =========================
+    # Required Fields Validation
+    # =========================
+
+    if not title:
+        return jsonify({"message": "Title is required"}), 400
+
+    # =========================
+    # Length Validation
+    # =========================
+
+    if not validate_title(title):
+        return jsonify({"message": "Title must be between 3 and 255 characters"}), 400
+
+    if not validate_description(description):
+        return jsonify({"message": "Description cannot exceed 1000 characters"}), 400
+
+    # =========================
+    # Foreign Key Validation
+    # =========================
+
+    if assigned_to is not None:
+        assigned_user = User.query.get(assigned_to)
+
+        if not assigned_user:
+            return jsonify({"message": "Assigned user not found"}), 404
 
     current_user_id = get_jwt_identity()
 
@@ -195,7 +235,6 @@ def update_task(task_id):
         description: Task not found
     """
     task = Task.query.get(task_id)
-
     if not task:
         return jsonify({"message": "Task not found"}), 404
 
@@ -210,6 +249,54 @@ def update_task(task_id):
         return jsonify({"message": "Access forbidden"}), 403
 
     data = request.get_json()
+
+    # =========================
+    # Request Validation
+    # =========================
+
+    if not validate_request_body(data):
+        return jsonify({"message": "Request body is required"}), 400
+
+    # =========================
+    # Length Validation
+    # =========================
+
+    new_title = data.get("title")
+    if new_title is not None:
+        if not validate_title(new_title):
+            return (
+                jsonify({"message": "Title must be between 3 and 255 characters"}),
+                400,
+            )
+
+    new_description = data.get("description")
+    if not validate_description(new_description):
+        return jsonify({"message": "Description cannot exceed 1000 characters"}), 400
+
+    # =========================
+    # Enum Validation
+    # =========================
+
+    new_status = data.get("status")
+
+    if new_status is not None and not validate_task_status(new_status):
+        return jsonify({"message": "Invalid task status"}), 400
+
+    # =========================
+    # Foreign Key Validation
+    # =========================
+
+    assigned_to = data.get("assigned_to")
+
+    if assigned_to is not None:
+        assigned_user = User.query.get(assigned_to)
+
+        if not assigned_user:
+            return jsonify({"message": "Assigned user not found"}), 404
+
+    # =========================
+    # Update Task
+    # =========================
 
     task.title = data.get("title", task.title)
     task.description = data.get("description", task.description)
