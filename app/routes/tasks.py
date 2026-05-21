@@ -4,6 +4,12 @@ from flask_jwt_extended import jwt_required, get_jwt_identity
 from app.extensions import db
 from app.models.task import Task
 from app.models.user import User
+from app.validators.task_validators import (
+    validate_request_body,
+    validate_title,
+    validate_description,
+    validate_task_status,
+)
 
 tasks_bp = Blueprint("tasks", __name__)
 
@@ -54,7 +60,7 @@ def create_task():
     # Request Validation
     # =========================
 
-    if not data:
+    if not validate_request_body(data):
         return jsonify({"message": "Request body is required"}), 400
 
     title = data.get("title")
@@ -72,10 +78,10 @@ def create_task():
     # Length Validation
     # =========================
 
-    if len(title) < 3 or len(title) > 255:
+    if not validate_title(title):
         return jsonify({"message": "Title must be between 3 and 255 characters"}), 400
 
-    if description is not None and len(description) > 1000:
+    if not validate_description(description):
         return jsonify({"message": "Description cannot exceed 1000 characters"}), 400
 
     # =========================
@@ -249,7 +255,7 @@ def update_task(task_id):
     # Request Validation
     # =========================
 
-    if not data:
+    if not validate_request_body(data):
         return jsonify({"message": "Request body is required"}), 400
 
     # =========================
@@ -258,24 +264,23 @@ def update_task(task_id):
 
     new_title = data.get("title")
     if new_title is not None:
-        if len(new_title) < 3 or len(new_title) > 255:
+        if not validate_title(new_title):
             return (
                 jsonify({"message": "Title must be between 3 and 255 characters"}),
                 400,
             )
 
     new_description = data.get("description")
-    if new_description is not None and len(new_description) > 1000:
+    if not validate_description(new_description):
         return jsonify({"message": "Description cannot exceed 1000 characters"}), 400
 
     # =========================
     # Enum Validation
     # =========================
 
-    valid_statuses = ["todo", "in_progress", "done"]
     new_status = data.get("status")
 
-    if new_status is not None and new_status not in valid_statuses:
+    if new_status is not None and not validate_task_status(new_status):
         return jsonify({"message": "Invalid task status"}), 400
 
     # =========================

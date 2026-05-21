@@ -1,4 +1,3 @@
-import re
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
 
@@ -6,6 +5,13 @@ from app.extensions import db, bcrypt
 from app.models.user import User
 from app.models.role import Role
 from app.middleware.rbac import role_required
+from app.validators.auth_validators import (
+    validate_request_body,
+    validate_required_fields,
+    validate_email_format,
+    validate_username,
+    validate_password,
+)
 
 auth_bp = Blueprint("auth", __name__)
 
@@ -57,7 +63,7 @@ def register():
     # Request Validation
     # =========================
 
-    if not data:
+    if not validate_request_body(data):
         return jsonify({"message": "Request body is required"}), 400
 
     username = data.get("username")
@@ -68,28 +74,24 @@ def register():
     # Required Fields Validation
     # =========================
 
-    if not username or not email or not password:
+    if not validate_required_fields(username, email, password):
         return jsonify({"message": "Username, email and password are required"}), 400
 
     # =========================
     # Email Format Validation
     # =========================
 
-    email_pattern = r"^[^\s@]+@[^\s@]+\.[^\s@]+$"
-
-    if not re.match(email_pattern, email):
-        return jsonify({
-            "message": "Invalid email format"
-        }), 400
+    if not validate_email_format(email):
+        return jsonify({"message": "Invalid email format"}), 400
 
     # =========================
     # Length Validation
     # =========================
 
-    if len(username) < 3 or len(username) > 50:
+    if not validate_username(username):
         return jsonify({"message": "Username must be between 3 and 50 characters"}), 400
 
-    if len(password) < 8:
+    if not validate_password(password):
         return jsonify({"message": "Password must be at least 8 characters long"}), 400
 
     # =========================
@@ -160,12 +162,12 @@ def login():
     # Request Validation
     # =========================
 
-    if not data:
+    if not validate_request_body(data):
         return jsonify({"message": "Request body is required"}), 400
 
     email = data.get("email")
     password = data.get("password")
-    if not email or not password:
+    if not validate_required_fields(email, password):
         return jsonify({"message": "Email and password are required"}), 400
 
     user = User.query.filter_by(email=email).first()
