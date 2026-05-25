@@ -74,6 +74,7 @@ def create_task():
     title = data.get("title")
     description = data.get("description")
     assigned_to = data.get("assigned_to")
+    status = data.get("status")
 
     # =========================
     # Required Fields Validation
@@ -92,6 +93,9 @@ def create_task():
     if not validate_description(description):
         raise APIError("Description cannot exceed 1000 characters", 400)
 
+    if status is not None and not validate_task_status(status):
+        raise APIError("Invalid task status", 400)
+
     # =========================
     # Foreign Key Validation
     # =========================
@@ -107,6 +111,7 @@ def create_task():
     new_task = Task(
         title=title,
         description=description,
+        status=status,
         created_by=current_user_id,
         assigned_to=assigned_to,
     )
