@@ -1,22 +1,22 @@
+
 # Cloud-Native Task Management API
 
-A task management REST API built with Flask, MySQL, JWT authentication, RBAC, and Docker. The project includes API documentation via Swagger, database migrations, and seeded role support.
+A Flask-based task management REST API with JWT authentication, role-based access control, task assignment, database migrations, and Docker deployment.
 
 ## Features
 
-- JWT-based authentication
-- Role-based access control with `admin`, `manager`, and `user`
-- Task CRUD endpoints
-- Task assignment support
-- Input validation for users and tasks
-- Swagger UI documentation at `/apidocs/`
-- MySQL database with Alembic migrations
-- Docker Compose deployment
+- JWT authentication with protected routes
+- Role-based access control (`admin`, `manager`, `user`)
+- Task CRUD operations with assignment support
+- Validation for auth and task payloads
+- Swagger UI documentation via Flasgger at `/apidocs/`
+- MySQL persistence with Alembic migrations
+- Docker Compose deployment with automatic migration and seeding
 
 ## Prerequisites
 
 - Docker and Docker Compose
-- Python 3.11+ (for local development)
+- Python 3.11+ for local development
 - Git
 
 ## Installation
@@ -27,35 +27,48 @@ A task management REST API built with Flask, MySQL, JWT authentication, RBAC, an
    cd cloud-native-task-management-api
    ```
 
-2. Create a `.env` file with the required environment variables, or ensure your `docker-compose.yml` env file is configured.
+2. Create a `.env` file with the required environment variables.
 
 3. Start the application with Docker Compose:
    ```bash
    docker compose up --build
    ```
 
-   The container entrypoint automatically runs database migrations and seeds default roles.
+   The API container will run migrations and seed the default roles automatically.
 
 ## Running Locally Without Docker
 
-1. Install dependencies:
+1. Create and activate a virtual environment:
+   ```bash
+   python -m venv .venv
+   source .venv/Scripts/activate  # Windows
+   source .venv/bin/activate      # macOS/Linux
+   ```
+
+2. Install dependencies:
    ```bash
    pip install -r requirements.txt
    ```
 
-2. Create a `.env` file with your database and JWT settings.
+3. Create a `.env` file with the required environment variables.
 
-3. Apply database migrations:
+4. Set the Flask application entrypoint:
+   ```bash
+   set FLASK_APP=run.py          # Windows
+   export FLASK_APP=run.py       # macOS/Linux
+   ```
+
+5. Apply database migrations:
    ```bash
    flask db upgrade
    ```
 
-4. Seed default roles:
+6. Seed default roles:
    ```bash
    python seed.py
    ```
 
-5. Run the application:
+7. Start the application:
    ```bash
    python run.py
    ```
@@ -68,18 +81,18 @@ A task management REST API built with Flask, MySQL, JWT authentication, RBAC, an
 
 ## Authentication Endpoints
 
-All auth routes are mounted under `/api/auth`.
+All authentication routes are mounted under `/api/auth`.
 
 - `POST /api/auth/register` - Register a new user
 - `POST /api/auth/login` - Authenticate and retrieve a JWT
-- `GET /api/auth/profile` - Get current user profile (requires token)
-- `GET /api/auth/admin` - Admin-only endpoint (requires token)
+- `GET /api/auth/profile` - Get the authenticated user profile
+- `GET /api/auth/admin` - Admin-only access test endpoint
 
 ### Registration Validation
 
-- `username` must be 3-50 characters
-- `email` must be valid and unique
-- `password` must be at least 8 characters
+- `username`: required, 3-50 characters
+- `email`: required, must be valid
+- `password`: required, minimum 8 characters
 
 ## Task Endpoints
 
@@ -91,18 +104,18 @@ Task routes are mounted under `/api/tasks` and require a valid JWT.
 - `PUT /api/tasks/<task_id>` - Update a task
 - `DELETE /api/tasks/<task_id>` - Delete a task
 
-### Task Fields
+### Task Payloads
 
-- `title` (required): 3-255 characters
+- `title` (required for creation): 3-255 characters
 - `description` (optional): up to 1000 characters
 - `status` (optional): one of `todo`, `in_progress`, `done`
 - `assigned_to` (optional): user ID
 
 ### Task Permissions
 
-- Admins can update and delete any task
-- Task creators can update/delete their own tasks
-- Other users are forbidden from modifying tasks they do not own
+- Admin users can update or delete any task
+- Task creators can update or delete their own tasks
+- Other authenticated users cannot modify tasks they do not own
 
 ## Example Requests
 
@@ -147,6 +160,8 @@ The Docker Compose setup includes:
 - `api`: Flask application exposed on port `5000`
 - `db`: MySQL 8.4 database exposed on port `3307`
 
+The `api` container uses `entrypoint.sh` to wait for MySQL, run migrations, seed roles, and start the application.
+
 ## Testing
 
 Run tests inside the Docker container:
@@ -160,8 +175,11 @@ docker compose exec api python -m pytest tests/
 cloud-native-task-management-api/
 ├── app/
 │   ├── __init__.py
-│   ├── calculator.py
 │   ├── config.py
+│   ├── errors/
+│   │   ├── __init__.py
+│   │   ├── exceptions.py
+│   │   └── handlers.py
 │   ├── extensions/
 │   │   └── __init__.py
 │   ├── middleware/
@@ -174,6 +192,9 @@ cloud-native-task-management-api/
 │   ├── routes/
 │   │   ├── auth.py
 │   │   └── tasks.py
+│   ├── services/
+│   ├── utils/
+│   │   └── db_helpers.py
 │   └── validators/
 │       ├── auth_validators.py
 │       └── task_validators.py
@@ -182,6 +203,7 @@ cloud-native-task-management-api/
 ├── tests/
 ├── docker-compose.yml
 ├── Dockerfile
+├── entrypoint.sh
 ├── pyproject.toml
 ├── requirements.txt
 ├── requirements-dev.txt
