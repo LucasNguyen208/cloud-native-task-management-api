@@ -10,6 +10,8 @@ from app.validators.task_validators import (
     validate_description,
     validate_task_status,
 )
+from app.errors.exceptions import APIError
+from app.utils.db_helpers import safe_commit
 
 tasks_bp = Blueprint("tasks", __name__)
 
@@ -52,7 +54,13 @@ def create_task():
 
     responses:
       201:
-        description: Task created successfully
+        description: Task created
+
+      400:
+        description: Validation failed
+
+      404:
+        description: Assigned user not found
     """
     data = request.get_json()
 
@@ -61,7 +69,7 @@ def create_task():
     # =========================
 
     if not validate_request_body(data):
-        return jsonify({"message": "Request body is required"}), 400
+        raise APIError("Request body is required", 400)
 
     title = data.get("title")
     description = data.get("description")
@@ -72,17 +80,17 @@ def create_task():
     # =========================
 
     if not title:
-        return jsonify({"message": "Title is required"}), 400
+        raise APIError("Title is required", 400)
 
     # =========================
     # Length Validation
     # =========================
 
     if not validate_title(title):
-        return jsonify({"message": "Title must be between 3 and 255 characters"}), 400
+        raise APIError("Title must be between 3 and 255 characters", 400)
 
     if not validate_description(description):
-        return jsonify({"message": "Description cannot exceed 1000 characters"}), 400
+        raise APIError("Description cannot exceed 1000 characters", 400)
 
     # =========================
     # Foreign Key Validation
@@ -92,7 +100,7 @@ def create_task():
         assigned_user = User.query.get(assigned_to)
 
         if not assigned_user:
-            return jsonify({"message": "Assigned user not found"}), 404
+            raise APIError("Assigned user not found", 404)
 
     current_user_id = get_jwt_identity()
 
@@ -104,7 +112,7 @@ def create_task():
     )
 
     db.session.add(new_task)
-    db.session.commit()
+    safe_commit()
 
     return jsonify({"message": "Task created successfully"}), 201
 
@@ -123,7 +131,7 @@ def get_tasks():
 
     responses:
       200:
-        description: List of tasks retrieved successfully
+          description: List of tasks retrieved successfully
     """
     tasks = Task.query.all()
 
@@ -172,7 +180,7 @@ def get_task(task_id):
     task = Task.query.get(task_id)
 
     if not task:
-        return jsonify({"message": "Task not found"}), 404
+        raise APIError("Task not found", 404)
 
     result = {
         "id": task.id,
@@ -228,6 +236,9 @@ def update_task(task_id):
       200:
         description: Task updated successfully
 
+      400:
+        description: Validation failed
+
       403:
         description: Access forbidden
 
@@ -236,7 +247,7 @@ def update_task(task_id):
     """
     task = Task.query.get(task_id)
     if not task:
-        return jsonify({"message": "Task not found"}), 404
+        raise APIError("Task not found", 404)
 
     current_user_id = int(get_jwt_identity())
 
@@ -246,7 +257,7 @@ def update_task(task_id):
     is_creator = task.created_by == current_user_id
 
     if not is_admin and not is_creator:
-        return jsonify({"message": "Access forbidden"}), 403
+        raise APIError("Access forbidden", 403)
 
     data = request.get_json()
 
@@ -255,7 +266,7 @@ def update_task(task_id):
     # =========================
 
     if not validate_request_body(data):
-        return jsonify({"message": "Request body is required"}), 400
+        raise APIError("Request body is required", 400)
 
     # =========================
     # Length Validation
@@ -264,14 +275,11 @@ def update_task(task_id):
     new_title = data.get("title")
     if new_title is not None:
         if not validate_title(new_title):
-            return (
-                jsonify({"message": "Title must be between 3 and 255 characters"}),
-                400,
-            )
+            raise APIError("Title must be between 3 and 255 characters", 400)
 
     new_description = data.get("description")
     if not validate_description(new_description):
-        return jsonify({"message": "Description cannot exceed 1000 characters"}), 400
+        raise APIError("Description cannot exceed 1000 characters", 400)
 
     # =========================
     # Enum Validation
@@ -280,7 +288,7 @@ def update_task(task_id):
     new_status = data.get("status")
 
     if new_status is not None and not validate_task_status(new_status):
-        return jsonify({"message": "Invalid task status"}), 400
+        raise APIError("Invalid task status", 400)
 
     # =========================
     # Foreign Key Validation
@@ -292,7 +300,7 @@ def update_task(task_id):
         assigned_user = User.query.get(assigned_to)
 
         if not assigned_user:
-            return jsonify({"message": "Assigned user not found"}), 404
+            raise APIError("Assigned user not found", 404)
 
     # =========================
     # Update Task
@@ -303,7 +311,7 @@ def update_task(task_id):
     task.status = data.get("status", task.status)
     task.assigned_to = data.get("assigned_to", task.assigned_to)
 
-    db.session.commit()
+    safe_commit()
 
     return jsonify({"message": "Task updated successfully"}), 200
 
@@ -339,7 +347,7 @@ def delete_task(task_id):
     task = Task.query.get(task_id)
 
     if not task:
-        return jsonify({"message": "Task not found"}), 404
+        raise APIError("Task not found", 404)
 
     current_user_id = int(get_jwt_identity())
 
@@ -349,9 +357,9 @@ def delete_task(task_id):
     is_creator = task.created_by == current_user_id
 
     if not is_admin and not is_creator:
-        return jsonify({"message": "Access forbidden"}), 403
+        raise APIError("Access forbidden", 403)
 
     db.session.delete(task)
-    db.session.commit()
+    safe_commit()
 
     return jsonify({"message": "Task deleted successfully"}), 200

@@ -6,10 +6,12 @@ from app.models import User as User
 from app.routes.auth import auth_bp
 from app.routes.tasks import tasks_bp
 from flasgger import Swagger
+from app.errors.handlers import register_error_handlers
 
 
 def create_app():
     app = Flask(__name__)
+    register_error_handlers(app)
 
     app.config.from_object(Config)
 
