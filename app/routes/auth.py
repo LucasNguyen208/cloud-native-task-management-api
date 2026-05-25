@@ -12,8 +12,14 @@ from app.validators.auth_validators import (
     validate_username,
     validate_password,
 )
+from app.errors.exceptions import APIError
+from app.utils.db_helpers import safe_commit
 
 auth_bp = Blueprint("auth", __name__)
+
+# @auth_bp.route("/test-error", methods=["GET"])
+# def test_error():
+#     raise APIError("Test error", 418)
 
 
 @auth_bp.route("/register", methods=["POST"])
@@ -55,7 +61,10 @@ def register():
         description: User registered successfully
 
       400:
-        description: Email already exists
+        description: Validation failed
+
+      409:
+        description: Username or email already exists
     """
     data = request.get_json()
 
@@ -64,7 +73,7 @@ def register():
     # =========================
 
     if not validate_request_body(data):
-        return jsonify({"message": "Request body is required"}), 400
+        raise APIError("Request body is required", 400)
 
     username = data.get("username")
     email = data.get("email")
@@ -75,33 +84,24 @@ def register():
     # =========================
 
     if not validate_required_fields(username, email, password):
-        return jsonify({"message": "Username, email and password are required"}), 400
+        raise APIError("Username, email and password are required", 400)
 
     # =========================
     # Email Format Validation
     # =========================
 
     if not validate_email_format(email):
-        return jsonify({"message": "Invalid email format"}), 400
+        raise APIError("Invalid email format", 400)
 
     # =========================
     # Length Validation
     # =========================
 
     if not validate_username(username):
-        return jsonify({"message": "Username must be between 3 and 50 characters"}), 400
+        raise APIError("Username must be between 3 and 50 characters", 400)
 
     if not validate_password(password):
-        return jsonify({"message": "Password must be at least 8 characters long"}), 400
-
-    # =========================
-    # Duplicate Validation
-    # =========================
-
-    existing_user = User.query.filter_by(email=email).first()
-
-    if existing_user:
-        return jsonify({"message": "Email already exists"}), 409
+        raise APIError("Password must be at least 8 characters long", 400)
 
     default_role = Role.query.filter_by(name="user").first()
 
@@ -115,7 +115,7 @@ def register():
     )
 
     db.session.add(new_user)
-    db.session.commit()
+    safe_commit()
 
     return jsonify({"message": "User registered successfully"}), 201
 
@@ -153,8 +153,11 @@ def login():
       200:
         description: Login successful
 
+      400:
+        description: Invalid request
+
       401:
-        description: Invalid email or password
+        description: Invalid credentials
     """
     data = request.get_json()
 
@@ -163,22 +166,27 @@ def login():
     # =========================
 
     if not validate_request_body(data):
-        return jsonify({"message": "Request body is required"}), 400
+        raise APIError("Request body is required", 400)
 
     email = data.get("email")
     password = data.get("password")
+
+    # =========================
+    # Required Fields Validation
+    # =========================
+
     if not validate_required_fields(email, password):
-        return jsonify({"message": "Email and password are required"}), 400
+        raise APIError("Email and password are required", 400)
 
     user = User.query.filter_by(email=email).first()
 
     if not user:
-        return jsonify({"message": "Invalid email or password"}), 401
+        raise APIError("Invalid email or password", 401)
 
     is_password_correct = bcrypt.check_password_hash(user.password_hash, password)
 
     if not is_password_correct:
-        return jsonify({"message": "Invalid email or password"}), 401
+        raise APIError("Invalid email or password", 401)
 
     access_token = create_access_token(identity=str(user.id))
 
@@ -203,6 +211,9 @@ def profile():
 
       401:
         description: Missing or invalid token
+
+      404:
+        description: User not found
     """
     current_user_id = get_jwt_identity()
 
