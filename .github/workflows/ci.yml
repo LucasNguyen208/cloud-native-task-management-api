@@ -13,6 +13,8 @@ jobs:
 
   quality-and-test:
 
+    name: Run CI checks
+
     runs-on: ubuntu-latest
 
     services:
