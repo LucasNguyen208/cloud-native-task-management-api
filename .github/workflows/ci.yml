@@ -23,7 +23,7 @@ jobs:
 
         env:
 
-          MYSQL_ROOT_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          MYSQL_ROOT_PASSWORD: root
 
           MYSQL_DATABASE: task_management_test
 
@@ -68,7 +68,7 @@ jobs:
 
           cp .env.test.example .env.test
 
-          echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" >> .env.test
+          echo "DB_PASSWORD=root" >> .env.test
 
 
       - name: Ruff
