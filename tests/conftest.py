@@ -18,9 +18,9 @@ def app():
 
     db_uri = app.config["SQLALCHEMY_DATABASE_URI"]
 
-    assert "task_management_test" in db_uri, (
-        f"Refusing to run tests against non-test database: {db_uri}"
-    )
+    assert (
+        "task_management_test" in db_uri
+    ), f"Refusing to run tests against non-test database: {db_uri}"
 
     with app.app_context():
         roles = Role.query.all()
