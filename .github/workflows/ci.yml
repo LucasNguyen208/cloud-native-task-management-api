@@ -30,17 +30,6 @@ jobs:
         ports:
           - 3306:3306
 
-        options: >-
-
-          --health-cmd="mysqladmin ping --silent"
-
-          --health-interval=10s
-
-          --health-timeout=5s
-
-          --health-retries=20
-
-
     steps:
 
       - uses: actions/checkout@v4
@@ -86,12 +75,37 @@ jobs:
 
           black --check .
 
-
-      - name: Run migration
+      - name: Wait for MySQL
 
         run: |
 
-          export ENV_FILE=.env.test
+          sudo apt-get update
+
+          sudo apt-get install -y mysql-client
+
+          for i in {1..30}
+          do
+
+            mysql \
+            -h 127.0.0.1 \
+            -u root \
+            -proot \
+            -e "SELECT 1" \
+            && break
+
+            echo "Waiting..."
+
+            sleep 2
+
+          done
+
+      - name: Run migration
+
+        env:
+          ENV_FILE: .env.test
+
+        run: |
+
           flask db upgrade
 
 
