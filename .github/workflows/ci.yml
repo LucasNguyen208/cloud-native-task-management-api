@@ -32,7 +32,7 @@ jobs:
 
         options: >-
 
-          --health-cmd="mysqladmin ping"
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -proot"
 
           --health-interval=10s
 
