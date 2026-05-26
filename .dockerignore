@@ -4,4 +4,6 @@ __pycache__/
 .git/
 .pytest_cache/
 .env
-.env.test
+.env.*
+!.env.example
+!.env.test.example
