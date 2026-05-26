@@ -3,20 +3,13 @@
 echo ==================================
 echo Running Black formatter...
 echo ==================================
-black . -v
+black .
 IF %ERRORLEVEL% NEQ 0 EXIT /B %ERRORLEVEL%
 
 echo ==================================
 echo Running Black check...
 echo ==================================
-black --check . -v
-IF %ERRORLEVEL% NEQ 0 EXIT /B %ERRORLEVEL%
-
-echo.
-echo ==================================
-echo Running Ruff formatter...
-echo ==================================
-ruff format .
+black --check .
 IF %ERRORLEVEL% NEQ 0 EXIT /B %ERRORLEVEL%
 
 echo.
