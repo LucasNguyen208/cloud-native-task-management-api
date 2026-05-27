@@ -12,6 +12,10 @@ echo "Seeding roles..."
 
 python seed.py
 
-echo "Starting Flask app..."
+echo "Starting Gunicorn..."
 
-python run.py
+exec gunicorn \
+  --bind 0.0.0.0:5000 \
+  --workers 4 \
+  --timeout 60 \
+  run:app
