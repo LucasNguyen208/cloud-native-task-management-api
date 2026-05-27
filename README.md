@@ -70,14 +70,14 @@ A Flask-based task management REST API with JWT authentication, role-based acces
 
 7. Start the application:
    ```bash
-   python run.py
+   gunicorn --bind 0.0.0.0:5000 run:app
    ```
 
 ## API Base URL
 
 - Local development: `http://localhost:5000`
 - Swagger UI: `http://localhost:5000/apidocs/`
-- Health endpoint: `GET /`
+- Health endpoint: `GET /health`
 
 ## Authentication Endpoints
 
@@ -210,6 +210,11 @@ cloud-native-task-management-api/
 ├── run.py
 └── seed.py
 ```
+
+## Metadata
+
+Project catalog and deployment metadata are documented in `metadata.yml`.
+
 
 ## Contributing
 

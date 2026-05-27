@@ -1,0 +1,93 @@
+apiVersion: platform.io/v1
+
+kind: Project
+
+metadata:
+
+  name: cloud-native-task-management-api
+
+  displayName: Cloud Native Task Management API
+
+  description: >
+    Scalable cloud-native task management API
+    built with Flask, Docker and AWS.
+
+  owner: Long
+
+  repository: cloud-native-task-management-api
+
+  version: 1.0.0
+
+  tags:
+
+    - flask
+    - docker
+    - aws
+    - mysql
+    - gunicorn
+    - devops
+    - cloud-native
+
+
+spec:
+
+  lifecycle: development
+
+  runtime:
+
+    language: python
+
+    framework: flask
+
+    server: gunicorn
+
+    containerized: true
+
+
+  infrastructure:
+
+    container:
+
+      registry: aws-ecr
+
+      image:
+
+        cloud-native-task-management-api:v1.0.0
+
+    region:
+
+      ap-southeast-1
+
+    database:
+
+      mysql
+
+
+  deployment:
+
+    strategy:
+
+      docker-compose
+
+    target:
+
+      - local
+
+      - aws-ec2
+
+
+  quality:
+
+    ci:
+
+      github-actions
+
+    testing:
+
+      framework:
+
+        pytest
+
+      coverage:
+
+        "87%"
