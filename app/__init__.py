@@ -7,11 +7,13 @@ from app.routes.auth import auth_bp
 from app.routes.tasks import tasks_bp
 from flasgger import Swagger
 from app.errors.handlers import register_error_handlers
+from app.routes.health import health_bp
 
 
 def create_app():
     app = Flask(__name__)
     register_error_handlers(app)
+    app.register_blueprint(health_bp)
 
     app.config.from_object(Config)
 
